@@ -83,6 +83,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "Imadu Global Concepts" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "Imadu Global Concepts — Premium Chair Manufacturers, Nigeria" },
+      { name: "twitter:title", content: "Imadu Global Concepts — Premium Chair Manufacturers, Nigeria" },
+      { name: "description", content: "A modern, responsive website showcasing Imadu Global Concepts' premium chair manufacturing and branding services." },
+      { property: "og:description", content: "A modern, responsive website showcasing Imadu Global Concepts' premium chair manufacturing and branding services." },
+      { name: "twitter:description", content: "A modern, responsive website showcasing Imadu Global Concepts' premium chair manufacturing and branding services." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/721f1ece-ce95-4fa9-8b8c-67ab44bf0d1b/id-preview-5ff018ac--e69e8875-94b0-4d70-ac63-a72a53966733.lovable.app-1782494166829.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/721f1ece-ce95-4fa9-8b8c-67ab44bf0d1b/id-preview-5ff018ac--e69e8875-94b0-4d70-ac63-a72a53966733.lovable.app-1782494166829.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

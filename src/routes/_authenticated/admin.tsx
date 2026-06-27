@@ -251,7 +251,13 @@ function ProductForm({
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </Row>
-          <Row label="Cover image URL"><Input value={form.cover_image} onChange={(v) => setForm({ ...form, cover_image: v })} placeholder="https://… or /assets/…" /></Row>
+          <Row label="Cover image">
+            <ImageUpload
+              value={form.cover_image}
+              onChange={(url) => setForm({ ...form, cover_image: url })}
+              folder="products"
+            />
+          </Row>
           <Row label="Price (display text)"><Input value={form.price_text} onChange={(v) => setForm({ ...form, price_text: v })} placeholder="Request a quote" /></Row>
           <Row label="Dimensions"><Input value={form.dimensions} onChange={(v) => setForm({ ...form, dimensions: v })} /></Row>
           <Row label="Description">
@@ -300,18 +306,32 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function GalleryAdmin() {
   const qc = useQueryClient();
   const gallery = useQuery(galleryQuery);
-  const [url, setUrl] = useState("");
   const [caption, setCaption] = useState("");
   const [category, setCategory] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  async function add() {
-    if (!url) return toast.error("Image URL required");
-    const { error } = await supabase.from("gallery_images").insert({ url, caption: caption || null, category: category || null });
-    if (error) return toast.error(error.message);
-    toast.success("Image added");
-    setUrl(""); setCaption(""); setCategory("");
-    qc.invalidateQueries({ queryKey: ["gallery"] });
+  async function onFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setBusy(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue;
+        const url = await uploadImage(file, "gallery");
+        const { error } = await supabase
+          .from("gallery_images")
+          .insert({ url, caption: caption || null, category: category || null });
+        if (error) throw error;
+      }
+      toast.success("Images added");
+      setCaption(""); setCategory("");
+      qc.invalidateQueries({ queryKey: ["gallery"] });
+    } catch (e) {
+      toast.error((e as Error).message ?? "Upload failed");
+    } finally {
+      setBusy(false);
+    }
   }
+
   async function remove(id: string) {
     if (!confirm("Remove this image?")) return;
     const { error } = await supabase.from("gallery_images").delete().eq("id", id);
@@ -322,13 +342,23 @@ function GalleryAdmin() {
   return (
     <div>
       <h2 className="font-display text-2xl text-charcoal mb-6">Gallery</h2>
-      <div className="border border-border rounded-sm p-6 mb-8 grid sm:grid-cols-4 gap-3">
-        <input className={inputCls + " sm:col-span-2"} placeholder="Image URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <input className={inputCls} placeholder="Caption" value={caption} onChange={(e) => setCaption(e.target.value)} />
-        <div className="flex gap-3">
-          <input className={inputCls} placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} />
-          <button onClick={add} className="rounded-sm bg-wine px-4 text-sm text-primary-foreground hover:bg-wine-deep">Add</button>
+      <div className="border border-border rounded-sm p-6 mb-8 space-y-4">
+        <div className="grid sm:grid-cols-2 gap-3">
+          <input className={inputCls} placeholder="Caption (optional)" value={caption} onChange={(e) => setCaption(e.target.value)} />
+          <input className={inputCls} placeholder="Category (optional)" value={category} onChange={(e) => setCategory(e.target.value)} />
         </div>
+        <label className="flex items-center justify-center gap-2 cursor-pointer rounded-sm border border-dashed border-input bg-stone py-8 text-sm text-muted-foreground hover:text-charcoal">
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          {busy ? "Uploading…" : "Click to upload images (multiple allowed)"}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }}
+          />
+        </label>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -341,6 +371,77 @@ function GalleryAdmin() {
             {g.caption && <p className="text-xs text-muted-foreground mt-2">{g.caption}</p>}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Settings ---------------- */
+
+function SettingsAdmin() {
+  const qc = useQueryClient();
+  const settings = useQuery(siteSettingsQuery);
+  const [logo, setLogo] = useState("");
+  const [favicon, setFavicon] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (settings.data) {
+      setLogo(settings.data.logo_url);
+      setFavicon(settings.data.favicon_url);
+    }
+  }, [settings.data]);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await saveSetting("logo_url", logo);
+      await saveSetting("favicon_url", favicon);
+      toast.success("Settings saved — refresh to see changes");
+      qc.invalidateQueries({ queryKey: ["site_settings"] });
+    } catch (e) {
+      toast.error((e as Error).message ?? "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <h2 className="font-display text-2xl text-charcoal mb-2">Website settings</h2>
+      <p className="text-sm text-muted-foreground mb-8">
+        Upload your brand logo and browser favicon. Leave the logo empty to fall back to the default wordmark.
+      </p>
+
+      <div className="space-y-10">
+        <div>
+          <ImageUpload
+            label="Logo (recommended: transparent PNG, ~400×100px)"
+            value={logo}
+            onChange={setLogo}
+            folder="branding"
+            aspect="aspect-[4/1]"
+          />
+        </div>
+        <div>
+          <ImageUpload
+            label="Favicon (recommended: square PNG or ICO, 64×64px or larger)"
+            value={favicon}
+            onChange={setFavicon}
+            folder="branding"
+            aspect="aspect-square"
+          />
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <button
+          onClick={save}
+          disabled={saving}
+          className="rounded-sm bg-wine px-6 py-2.5 text-sm text-primary-foreground hover:bg-wine-deep disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Save settings"}
+        </button>
       </div>
     </div>
   );

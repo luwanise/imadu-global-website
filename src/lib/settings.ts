@@ -26,6 +26,6 @@ export const siteSettingsQuery = queryOptions({
 export async function saveSetting(key: keyof SiteSettings, value: string) {
   const { error } = await supabase
     .from("site_settings")
-    .upsert({ key, value: value as unknown as never }, { onConflict: "key" });
+    .upsert({ key, value: value as never }, { onConflict: "key" });
   if (error) throw error;
 }

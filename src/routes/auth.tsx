@@ -16,7 +16,6 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,23 +30,12 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Welcome back");
-        navigate({ to: "/admin", replace: true });
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin + "/admin" },
-        });
-        if (error) throw error;
-        toast.success("Account created. You can now sign in.");
-        setMode("signin");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Welcome back");
+      navigate({ to: "/admin", replace: true });
     } catch (err) {
-      toast.error((err as Error).message ?? "Authentication failed");
+      toast.error((err as Error).message ?? "Sign in failed");
     } finally {
       setLoading(false);
     }
@@ -57,11 +45,10 @@ function AuthPage() {
     <SiteLayout>
       <section className="container-page py-20 max-w-md">
         <p className="eyebrow">Admin</p>
-        <h1 className="mt-3 font-display text-4xl text-charcoal">
-          {mode === "signin" ? "Sign in" : "Create account"}
-        </h1>
+        <h1 className="mt-3 font-display text-4xl text-charcoal">Sign in</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Restricted area. Only authorised staff can access the dashboard.
+          Restricted area. Only authorised staff can access the dashboard. New
+          accounts are provisioned by the site owner — public sign-up is disabled.
         </p>
 
         <form onSubmit={onSubmit} className="mt-10 space-y-5">
@@ -91,16 +78,9 @@ function AuthPage() {
             disabled={loading}
             className="w-full inline-flex items-center justify-center rounded-sm bg-wine px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-wine-deep disabled:opacity-60 transition-colors"
           >
-            {loading ? "Working…" : mode === "signin" ? "Sign in" : "Create account"}
+            {loading ? "Working…" : "Sign in"}
           </button>
         </form>
-
-        <button
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-6 text-sm text-muted-foreground hover:text-wine"
-        >
-          {mode === "signin" ? "Need an account? Create one" : "Already have an account? Sign in"}
-        </button>
       </section>
     </SiteLayout>
   );

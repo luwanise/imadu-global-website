@@ -11,7 +11,10 @@ import {
   type Product,
 } from "@/lib/queries";
 import { resolveImage } from "@/lib/site";
-import { Edit, Trash2, Plus, LogOut, ShieldAlert, X } from "lucide-react";
+import { siteSettingsQuery, saveSetting } from "@/lib/settings";
+import { ImageUpload } from "@/components/admin/ImageUpload";
+import { uploadImage } from "@/lib/upload";
+import { Edit, Trash2, Plus, LogOut, ShieldAlert, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -24,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "products" | "gallery" | "testimonials";
+type Tab = "products" | "gallery" | "testimonials" | "settings";
 
 function AdminPage() {
   const navigate = useNavigate();
@@ -87,12 +90,12 @@ function AdminPage() {
           </button>
         </div>
 
-        <div className="border-b border-border flex gap-8 mb-10">
-          {(["products","gallery","testimonials"] as Tab[]).map((t) => (
+        <div className="border-b border-border flex gap-8 mb-10 overflow-x-auto">
+          {(["products","gallery","testimonials","settings"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`pb-3 text-sm capitalize -mb-px border-b-2 transition-colors ${
+              className={`pb-3 text-sm capitalize -mb-px border-b-2 transition-colors whitespace-nowrap ${
                 tab === t ? "border-wine text-wine" : "border-transparent text-charcoal/70 hover:text-charcoal"
               }`}
             >
@@ -104,6 +107,7 @@ function AdminPage() {
         {tab === "products" && <ProductsAdmin />}
         {tab === "gallery" && <GalleryAdmin />}
         {tab === "testimonials" && <TestimonialsAdmin />}
+        {tab === "settings" && <SettingsAdmin />}
       </section>
     </SiteLayout>
   );

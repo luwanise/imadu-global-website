@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Menu, X } from "lucide-react";
+import { siteSettingsQuery } from "@/lib/settings";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -13,6 +15,8 @@ const nav = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const settings = useQuery(siteSettingsQuery).data;
+  const logoUrl = settings?.logo_url;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -29,15 +33,21 @@ export function Header() {
     >
       <div className="container-page flex h-20 items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group" onClick={() => setOpen(false)}>
-          <span className="grid size-9 place-items-center rounded-sm bg-wine text-primary-foreground font-display text-lg leading-none">
-            I
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="font-display text-lg text-charcoal">Imadu Global</span>
-            <span className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">
-              Concepts
-            </span>
-          </span>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Imadu Global Concepts" className="h-10 w-auto object-contain" />
+          ) : (
+            <>
+              <span className="grid size-9 place-items-center rounded-sm bg-wine text-primary-foreground font-display text-lg leading-none">
+                I
+              </span>
+              <span className="flex flex-col leading-tight">
+                <span className="font-display text-lg text-charcoal">Imadu Global</span>
+                <span className="text-[10px] tracking-[0.22em] uppercase text-muted-foreground">
+                  Concepts
+                </span>
+              </span>
+            </>
+          )}
         </Link>
 
         <nav className="hidden md:flex items-center gap-9">

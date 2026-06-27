@@ -134,6 +134,28 @@ function RootComponent() {
     return () => subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Apply dynamic favicon from site_settings
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "favicon_url")
+      .maybeSingle()
+      .then(({ data }) => {
+        const url = typeof data?.value === "string" ? data.value : "";
+        if (cancelled || !url) return;
+        let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = "icon";
+          document.head.appendChild(link);
+        }
+        link.href = url;
+      });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

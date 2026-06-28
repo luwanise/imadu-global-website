@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ import { resolveImage } from "@/lib/site";
 import { siteSettingsQuery, saveSetting } from "@/lib/settings";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { uploadImage } from "@/lib/upload";
-import { Edit, Trash2, Plus, LogOut, ShieldAlert, X, Upload, Loader2 } from "lucide-react";
+import { Edit, Trash2, Plus, LogOut, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -24,6 +24,19 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  beforeLoad: async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) throw redirect({ to: "/auth" });
+    const { data: rows, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin");
+    if (error || !rows || rows.length === 0) {
+      throw redirect({ to: "/" });
+    }
+  },
   component: AdminPage,
 });
 

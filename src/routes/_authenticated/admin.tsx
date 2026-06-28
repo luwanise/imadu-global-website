@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ import { resolveImage } from "@/lib/site";
 import { siteSettingsQuery, saveSetting } from "@/lib/settings";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { uploadImage } from "@/lib/upload";
-import { Edit, Trash2, Plus, LogOut, ShieldAlert, X, Upload, Loader2 } from "lucide-react";
+import { Edit, Trash2, Plus, LogOut, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -24,6 +24,19 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  beforeLoad: async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) throw redirect({ to: "/auth" });
+    const { data: rows, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin");
+    if (error || !rows || rows.length === 0) {
+      throw redirect({ to: "/" });
+    }
+  },
   component: AdminPage,
 });
 
@@ -33,20 +46,6 @@ function AdminPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("products");
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      const uid = data.user?.id;
-      if (!uid) { setIsAdmin(false); return; }
-      const { data: rows } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", uid)
-        .eq("role", "admin");
-      setIsAdmin((rows?.length ?? 0) > 0);
-    });
-  }, []);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -55,27 +54,6 @@ function AdminPage() {
     navigate({ to: "/auth", replace: true });
   }
 
-  if (isAdmin === null) {
-    return <SiteLayout><div className="container-page py-32 text-muted-foreground">Loading…</div></SiteLayout>;
-  }
-
-  if (!isAdmin) {
-    return (
-      <SiteLayout>
-        <section className="container-page py-24 max-w-xl">
-          <ShieldAlert className="size-6 text-wine" />
-          <h1 className="mt-4 font-display text-3xl text-charcoal">Access pending</h1>
-          <p className="mt-3 text-muted-foreground">
-            Your account is signed in, but you don't have admin permissions yet.
-            Ask the site owner to grant you the <code className="bg-stone px-1.5 py-0.5 text-xs">admin</code> role.
-          </p>
-          <button onClick={signOut} className="mt-8 inline-flex items-center gap-2 text-sm text-charcoal hover:text-wine">
-            <LogOut className="size-4" /> Sign out
-          </button>
-        </section>
-      </SiteLayout>
-    );
-  }
 
   return (
     <SiteLayout>

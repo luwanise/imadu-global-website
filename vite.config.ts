@@ -7,9 +7,9 @@ import { nitro } from "nitro/vite";
 
 export default defineConfig({
   plugins: [
-    tanstackRouter({
+    process.env.NODE_ENV === "production" && tanstackRouter({
       target: "react",
-      autoCodeSplitting: true,
+      autoCodeSplitting: false,
     }),
 
     tanstackStart({
@@ -23,7 +23,7 @@ export default defineConfig({
     tailwindcss(),
 
     nitro(),
-  ],
+  ].filter(Boolean),
 
   resolve: {
     alias: {

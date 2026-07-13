@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, isRedirect, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ import { resolveImage } from "@/lib/site";
 import { siteSettingsQuery, saveSetting } from "@/lib/settings";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { uploadImage } from "@/lib/upload";
-import { verifyAdmin } from "@/lib/admin.functions";
+import { requireAdmin } from "@/lib/admin.functions";
 import { Edit, Trash2, Plus, LogOut, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,10 +27,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
   }),
   beforeLoad: async () => {
     try {
-      const { isAdmin } = await verifyAdmin();
-      if (!isAdmin) throw redirect({ to: "/" });
+      await requireAdmin();
     } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e;
+      if (isRedirect(e)) throw e;
       throw redirect({ to: "/auth" });
     }
   },

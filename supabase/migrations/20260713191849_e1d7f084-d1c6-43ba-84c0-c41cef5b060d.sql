@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.handle_first_user_admin() CASCADE;

@@ -1,17 +1,20 @@
-import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabase } from "@/integrations/supabase/client";
 
-export const requireAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
+export const requireAdmin = async () => {
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-    if (error || !isAdmin) {
-      throw new Error("Forbidden");
-    }
+  if (userError || !user) {
+    throw new Error("Unauthorized");
+  }
 
-    return { isAdmin: true };
+  const { data: isAdmin, error } = await supabase.rpc("has_role", {
+    _user_id: user.id,
+    _role: "admin",
   });
+
+  if (error || !isAdmin) {
+    throw new Error("Forbidden");
+  }
+
+  return { isAdmin: true };
+};

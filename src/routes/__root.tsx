@@ -10,7 +10,6 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -40,7 +39,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    // If you want remote error tracking, integrate Sentry/LogRocket/etc. here.
+    console.error("Captured route error:", error);
   }, [error]);
 
   return (
@@ -88,8 +88,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "A modern, responsive website showcasing Imadu Global Concepts' premium chair manufacturing and branding services." },
       { property: "og:description", content: "A modern, responsive website showcasing Imadu Global Concepts' premium chair manufacturing and branding services." },
       { name: "twitter:description", content: "A modern, responsive website showcasing Imadu Global Concepts' premium chair manufacturing and branding services." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/721f1ece-ce95-4fa9-8b8c-67ab44bf0d1b/id-preview-5ff018ac--e69e8875-94b0-4d70-ac63-a72a53966733.lovable.app-1782494166829.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/721f1ece-ce95-4fa9-8b8c-67ab44bf0d1b/id-preview-5ff018ac--e69e8875-94b0-4d70-ac63-a72a53966733.lovable.app-1782494166829.png" },
+      { property: "og:image", content: "https://via.placeholder.com/1200x630.png?text=Imadu+Global+Concepts" },
+      { name: "twitter:image", content: "https://via.placeholder.com/1200x630.png?text=Imadu+Global+Concepts" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

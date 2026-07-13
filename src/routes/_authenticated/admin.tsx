@@ -14,7 +14,7 @@ import { resolveImage } from "@/lib/site";
 import { siteSettingsQuery, saveSetting } from "@/lib/settings";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { uploadImage } from "@/lib/upload";
-import { verifyAdmin } from "@/lib/admin.functions";
+import { requireAdmin } from "@/lib/admin.functions";
 import { Edit, Trash2, Plus, LogOut, X, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,14 +25,13 @@ export const Route = createFileRoute("/_authenticated/admin")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  beforeLoad: async () => {
+  loader: async () => {
     try {
-      const { isAdmin } = await verifyAdmin();
-      if (!isAdmin) throw redirect({ to: "/" });
+      await requireAdmin();
     } catch (e) {
-      if (e && typeof e === "object" && "to" in e) throw e;
       throw redirect({ to: "/auth" });
     }
+    return { isAdmin: true };
   },
   component: AdminPage,
 });

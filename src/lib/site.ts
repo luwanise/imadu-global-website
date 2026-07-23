@@ -3,6 +3,7 @@ import catChurch from "@/assets/cat-church.jpg";
 import catClassroom from "@/assets/cat-classroom.jpg";
 import catOffice from "@/assets/cat-office.jpg";
 import catLounge from "@/assets/cat-lounge.jpg";
+import catEvent from "@/assets/cat-event.jpg";
 import workshop from "@/assets/workshop.jpg";
 
 // Map seeded asset paths -> bundled URLs.
@@ -12,6 +13,7 @@ const assetMap: Record<string, string> = {
   "/assets/cat-classroom.jpg": catClassroom,
   "/assets/cat-office.jpg": catOffice,
   "/assets/cat-lounge.jpg": catLounge,
+  "/assets/cat-event.jpg": catEvent,
   "/assets/workshop.jpg": workshop,
 };
 

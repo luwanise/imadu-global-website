@@ -282,7 +282,7 @@ function coverFor(slug: string): string {
     case "office": return "/assets/cat-office.jpg";
     case "home": return "/assets/cat-lounge.jpg";
     case "lounge": return "/assets/cat-lounge.jpg";
-    case "event": return "/assets/cat-church.jpg";
+    case "event": return "/assets/cat-event.jpg";
     default: return "/assets/hero-chair.jpg";
   }
 }
